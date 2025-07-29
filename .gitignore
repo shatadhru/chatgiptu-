@@ -1,0 +1,5 @@
+# node_modules ফোল্ডার পুরোটা ignore করবো
+node_modules/
+
+# environment variables ফাইল(ignore sensitive data)
+.env
