@@ -57,7 +57,7 @@ app.use(limiter);
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000" , "https://chatgiptu.onrender.com" , "https://shatadhru.shop" ,"https://zaroo.ai.shatadhru.shop"],
     credentials: true,
   })
 );
