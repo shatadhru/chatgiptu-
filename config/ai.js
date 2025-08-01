@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-const GEMINI_API_KEY = "AIzaSyBvElSjZ_XMg2 - UMXaKmwqU4ZaTOGaHTOs"
+const GEMINI_API_KEY = "AIzaSyDYbiGunPOUy_ILrpApc5cSXk6KinAyjxY"
 
 
 async function generateGeminiResponse(userText) {

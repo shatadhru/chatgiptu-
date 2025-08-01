@@ -1,6 +1,5 @@
 const express = require("express");
 const morgan = require("morgan");
-const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const compression = require("compression");
@@ -13,35 +12,17 @@ const http = require("http");
 const app = express();
 const server = http.createServer(app);
 
-// Helmet with CSP allowing unsafe-inline scripts (not recommended for prod, but works)
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],  // <-- এখানে unsafe-inline add করলাম
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "ws:"],
-        fontSrc: ["'self'", "https:", "data:"],
-        objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
-      },
-    },
-  })
-);
-
 // Middlewares
 app.use(express.json());
 app.use(hpp());
 app.use(compression());
 
-// Sanitize requests
-app.use((req, res, next) => {
-  req.body = sanitize(req.body);
-  req.query = sanitize({ ...req.query });
-  next();
-});
+// // Sanitize requests
+// app.use((req, res, next) => {
+//   req.body = sanitize(req.body);
+//   req.query = sanitize({ ...req.query });
+//   next();
+// });
 
 // Rate limiter (optional)
 /*
@@ -52,6 +33,28 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 */
+
+// ─── SESSION STORE ───────────────────────────────────────────────
+
+const sessionStore = {};
+app.locals.sessionStore = sessionStore;
+
+
+// Session cleanup logic
+const SESSION_TIMEOUT = 1000 * 60 * 60; // ১ ঘন্টা inactivity
+
+setInterval(() => {
+  const now = Date.now();
+  const sessionStore = app.locals.sessionStore;
+
+  for (const userId in sessionStore) {
+    if (sessionStore[userId].lastActive && now - sessionStore[userId].lastActive > SESSION_TIMEOUT) {
+      console.log(`Session expired for userId: ${userId}, clearing session.`);
+      delete sessionStore[userId];
+    }
+  }
+}, 1000 * 60 * 5); // প্রতি ৫ মিনিটে চেক করবে
+
 
 // Logging & CORS
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
@@ -73,11 +76,14 @@ app.use("/profile", require("./routes/ProfileManagement/ProfileManagement"));
 app.use("/data", require("./routes/Data/basicData"));
 app.use("/chat", require("./routes/chat/artificialIntelligence"));
 
-// Serve static frontend
+
+// Serve static files from /public
 app.use(express.static(path.join(__dirname, "public")));
 
+// Default route – serve index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
 
 module.exports = server;
